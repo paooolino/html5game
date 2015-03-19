@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+	<style>
+	*{padding:0;margin:0;}
+	html,body{height:100%;}
+	</style>
+</head>
+<body>
+
+	<canvas id="canvas" width="800" height="600"></canvas>
+	
+	<script>
+		var ctx = document.getElementById('canvas').getContext("2d");
+		var hm = [
+			0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,1,1,1,0,0,
+			0,0,0,0,1,1,2,1,0,0,
+			0,0,0,0,1,1,1,1,0,0,
+			0,0,0,1,1,2,2,1,1,0,
+			0,0,0,0,1,2,2,1,0,0,
+			0,0,0,0,1,1,1,0,0,0,
+			0,0,0,0,0,0,0,0,0,1,
+			0,0,0,0,0,0,0,0,1,1,
+			0,0,0,0,0,0,0,1,1,1,
+		];
+		var map_h = 10;
+		var map_w = 10;
+		var tile_size = 20;
+		
+		function dot(x,y) {
+			ctx.fillRect(x,y,1,1);
+		}
+
+		function applyIso(x,y,h) {
+			var offset_x = ( (map_h * tile_size) - (y + tile_size) );
+			var newX = x + offset_x;
+			var newY = (y / 2) - h * (tile_size / 4);
+
+			return [newX, newY];
+		}
+		
+		for( var p = 0; p < hm.length; p++ ) {
+			var x = p % map_w;
+			var y = Math.floor( p / map_h );
+			var h = hm[p];
+			var iso_point = applyIso(x * tile_size, y * tile_size, h);
+			dot( iso_point[0], iso_point[1] );	
+		}
+
+	</script>
+</body>
+</html>
