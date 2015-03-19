@@ -27,25 +27,41 @@
 		var map_h = 10;
 		var map_w = 10;
 		var tile_size = 20;
-		
-		function dot(x,y) {
-			ctx.fillRect(x,y,1,1);
+		var cos45 = sen45 = 0.70710678118; // 1/sqrt2
+		 
+		function dot( p ) {
+			ctx.fillRect(p[0],p[1],1,1);
 		}
 
-		function applyIso(x,y,h) {
-			var offset_x = ( (map_h * tile_size) - (y + tile_size) );
-			var newX = x + offset_x;
-			var newY = (y / 2) - h * (tile_size / 4);
-
-			return [newX, newY];
+		function rotate45( p ) {
+			var x = p[0] * cos45 - p[1] * sen45;
+			var y = p[0] * sen45 + p[1] * cos45;
+			return [ x, y ];
+		}
+		
+		function scale( p, sx, sy ) {
+			var x = p[0] * sx;
+			var y = p[1] * sy;
+			return [ x, y ];			
+		}
+		
+		function translate( p, tx, ty ) {
+			var x = p[0] + tx;
+			var y = p[1] + ty;
+			return [ x, y ];		
 		}
 		
 		for( var p = 0; p < hm.length; p++ ) {
 			var x = p % map_w;
 			var y = Math.floor( p / map_h );
-			var h = hm[p];
-			var iso_point = applyIso(x * tile_size, y * tile_size, h);
-			dot( iso_point[0], iso_point[1] );	
+			var h = hm[p]; // not used, at the moment.
+			
+			var point = [x * tile_size, y * tile_size];
+			point = rotate45(point);
+			point = translate(point, 200, 100);
+			point = scale(point, 1, 0.5);
+			
+			dot( point );	
 		}
 
 	</script>
