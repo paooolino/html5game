@@ -1,0 +1,125 @@
+<!doctype html>
+<html>
+<head>
+	<style>
+	*{padding:0;margin:0;}
+	html,body{height:100%;}
+	</style>
+</head>
+<body>
+
+	<canvas id="canvas" width="800" height="600"></canvas>
+	
+	<script>
+		var ctx = document.getElementById('canvas').getContext("2d");
+		var hm = [
+			0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,1,1,1,0,0,
+			0,0,0,0,1,1,2,1,0,0,
+			0,0,0,0,1,1,1,1,0,0,
+			0,0,0,1,1,2,2,1,1,0,
+			0,0,0,0,1,2,2,1,0,0,
+			0,0,0,0,1,1,1,0,0,0,
+			0,0,0,0,0,0,0,0,0,1,
+			0,0,0,0,0,0,1,1,1,1,
+			0,0,0,0,0,0,1,1,1,1,
+		];
+		var map_h = 10;
+		var map_w = 10;
+		var tile_size = 40;
+		var cos45 = sen45 = 0.70710678118; // 1/sqrt2
+		 
+		function dot( p ) {
+			ctx.fillRect(p[0],p[1],1,1);
+		}
+
+		function rotate45( p ) {
+			var x = p[0] * cos45 - p[1] * sen45;
+			var y = p[0] * sen45 + p[1] * cos45;
+			return [ x, y ];
+		}
+		
+		function scale( p, sx, sy ) {
+			var x = p[0] * sx;
+			var y = p[1] * sy;
+			return [ x, y ];			
+		}
+		
+		function translate( p, tx, ty ) {
+			var x = p[0] + tx;
+			var y = p[1] + ty;
+			return [ x, y ];		
+		}
+
+		function linearIndexToPoint( i ) {
+			var x = i % map_w;
+			var y = Math.floor( i / map_h );	
+			return [ x, y ];
+		}
+		
+		function east( p ) {
+			var x = p[0] + 1;
+			if( x > map_w - 1 ) {
+				return;
+			}
+			return [x, p[1]];
+		}
+		
+		function south( p ) {
+			var y = p[1] + 1;
+			if( y > map_h - 1 ) {
+				return;
+			}
+			return [p[0], y];
+		}
+		
+		function line(p1, p2) {
+			ctx.beginPath();
+			ctx.moveTo(p1[0], p1[1]);
+			ctx.lineTo(p2[0], p2[1]);
+			ctx.stroke();
+		}
+		
+		function pointToLinearIndex( p ) {
+			return p[1] * map_w + p[0];
+		}
+		
+		for( var p = 0; p < hm.length; p++ ) {
+			var point = linearIndexToPoint( p );
+			var point_east = east(point);
+			var point_south = south(point);
+			var h = hm[p]; // not used, at the moment.
+			
+			point = rotate45(point);
+			// order matters!
+			// scaling is relative to the origin. translate at the for the desired effect.
+			point = scale(point, tile_size, tile_size/2);
+			point = translate(point, 300, 100);			
+			point = translate(point, 0, - h * (tile_size/2));
+			
+			if( point_east ) {
+				var h_east = hm[pointToLinearIndex(point_east)];
+				point_east = rotate45(point_east);
+				point_east = scale(point_east, tile_size, tile_size/2);
+				point_east = translate(point_east, 300, 100);
+				point_east = translate(point_east, 0, - h_east * (tile_size/2));
+				
+				line( point, point_east );
+			}
+
+			if( point_south ) {
+				var h_south = hm[pointToLinearIndex(point_south)];
+				point_south = rotate45(point_south);
+				point_south = scale(point_south, tile_size, tile_size/2);
+				point_south = translate(point_south, 300, 100);	
+				point_south = translate(point_south, 0, - h_south * (tile_size/2));
+				
+				line( point, point_south );
+			}			
+			
+			dot( point );	
+		}
+
+	</script>
+</body>
+</html>
