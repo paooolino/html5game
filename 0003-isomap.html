@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+<head>
+	<style>
+	*{padding:0;margin:0;}
+	html,body{height:100%;}
+	</style>
+</head>
+<body>
+
+	<canvas id="canvas" width="800" height="600"></canvas>
+	
+	<script>
+		var ctx = document.getElementById('canvas').getContext("2d");
+		var map_h = 20;
+		var map_w = 20;
+		var tile_size = 20;
+		
+		function dot(x,y) {
+			ctx.fillRect(x,y,1,1);
+		}
+
+		function applyIso(x,y) {
+			var offset_x = ( (map_h * tile_size) - (y + tile_size) );
+			var newX = x + offset_x;
+			var newY = y / 2;
+		
+			return [newX, newY];
+		}
+		
+		for( var j = 0; j < map_h; j++ ) {
+			for( var i = 0; i < map_w; i++ ) {
+				var iso_point = applyIso(i*tile_size, j*tile_size);
+				dot( iso_point[0], iso_point[1] );	
+			}
+		}
+
+	</script>
+</body>
+</html>
