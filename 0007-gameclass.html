@@ -1,0 +1,185 @@
+<!doctype html>
+<html>
+<head>
+	<style>
+	*{padding:0;margin:0;}
+	html,body{height:100%;}
+	</style>
+</head>
+<body>
+
+	<canvas id="canvas" width="800" height="600"></canvas>
+	
+	<script>
+		function Game(_canvas_id) {
+  
+			// constructor: get 2d context.
+			var ctx = document.getElementById( _canvas_id ).getContext("2d");
+  
+			// map infos.
+			var hm;
+			var map_w;
+			var map_h;
+  
+			// rendering infos.
+			var tile_size = 40;
+			var cos45 = sen45 = 0.70710678118; // 1/sqrt2
+	
+  
+  
+			//
+			//
+			// private functions
+			//
+			//
+
+			// array index conversion
+			function linearIndexToPoint( i ) {
+				var x = i % map_w;
+				var y = Math.floor( i / map_h );	
+				return [ x, y ];
+			} 
+
+			function pointToLinearIndex( p ) {
+				return p[1] * map_w + p[0];
+			}
+ 
+			// drawing
+			function dot( p ) {
+				var p = render_transform( p );
+				ctx.fillRect(p[0],p[1],1,1);
+			}  
+
+			function line(p1, p2) {
+				p1 = render_transform( p1 );
+				p2 = render_transform( p2 );
+				ctx.beginPath();
+				ctx.moveTo(p1[0], p1[1]);
+				ctx.lineTo(p2[0], p2[1]);
+				ctx.stroke();
+			}
+
+			// getting points
+			function east( p ) {
+				var x = p[0] + 1;
+				if( x > map_w - 1 ) {
+					return;
+				}
+				return [x, p[1]];
+			}
+
+			function south( p ) {
+				var y = p[1] + 1;
+				if( y > map_h - 1 ) {
+					return;
+				}
+				return [p[0], y];
+			}
+			
+			function getPointHeight( p ) {
+				var i = pointToLinearIndex(p);
+				return hm[i];
+			}
+
+			// transformations
+			function rotate45( p ) {
+				var x = p[0] * cos45 - p[1] * sen45;
+				var y = p[0] * sen45 + p[1] * cos45;
+				return [ x, y ];
+			}
+
+			function scale( p, sx, sy ) {
+				var x = p[0] * sx;
+				var y = p[1] * sy;
+				return [ x, y ];			
+			}
+
+			function translate( p, tx, ty ) {
+				var x = p[0] + tx;
+				var y = p[1] + ty;
+				return [ x, y ];		
+			}  
+
+			function render_transform( p ) {
+				var h = hm[pointToLinearIndex(p)];
+				p = rotate45(p);
+				p = scale(p, tile_size, tile_size/2);
+				p = translate(p, 300, 0);
+				p = translate(p, 0, - h * (tile_size/2));
+
+				return p;
+			}
+			
+  
+  
+			//
+			//
+			// public functions
+			//
+			//
+   
+			this.setMap = function(_hm, _map_w, _map_h) {
+				hm = _hm;
+				map_w = _map_w;
+				map_h = _map_h;
+			}
+  
+			this.render = function() {
+				for( var p = 0; p < hm.length; p++ ) {
+				
+					// dots
+					var point = linearIndexToPoint( p );
+					dot( point );
+					
+					// lines
+					var point_east = east(point);
+					if( point_east ) {
+						line( point, point_east );
+					}
+					var point_south = south(point);
+					if( point_south ) {
+						line( point, point_south );
+					}
+					
+					// triangles
+					if( point_south && point_east ) {
+						line( point_south, point_east );
+					}
+
+				}
+			}
+  
+		}
+
+
+
+		// game config
+		var canvas_id = "canvas";
+		var hm = [
+			0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,1,1,1,0,0,
+			0,0,0,0,1,1,2,1,0,0,
+			0,0,0,0,1,1,1,1,0,0,
+			0,0,0,1,1,2,2,1,1,0,
+			0,0,0,0,1,2,2,1,0,0,
+			0,0,0,0,1,1,1,0,0,0,
+			0,0,0,0,0,0,0,0,0,1,
+			0,0,0,0,0,0,1,1,1,1,
+			0,0,0,0,0,0,1,1,1,1,
+		];
+		var map_w = 10;
+		var map_h = 10;
+
+
+
+		// game building
+		var g = new Game(canvas_id);
+		g.setMap(hm, map_w, map_h);
+		g.render();
+
+
+
+
+	</script>
+</body>
+</html>
