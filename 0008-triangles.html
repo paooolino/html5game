@@ -1,0 +1,248 @@
+<!doctype html>
+<html>
+<head>
+	<style>
+	*{padding:0;margin:0;}
+	html,body{height:100%;}
+	</style>
+</head>
+<body>
+
+	<canvas id="canvas" width="800" height="600"></canvas>
+	
+	<script>
+		function Game(_canvas_id) {
+  
+			// constructor: get 2d context.
+			var ctx = document.getElementById( _canvas_id ).getContext("2d");
+  
+			// 
+			var triangles = [];
+			
+			// map infos.
+			var hm;
+			var map_w;
+			var map_h;
+  
+			// rendering infos.
+			var tile_size = 40;
+			var cos45 = sen45 = 0.70710678118; // 1/sqrt2
+	
+  
+  
+			//
+			//
+			// private functions
+			//
+			//
+
+			// coordinates helper functions
+			function coords( i ) {
+				var x = i % map_w;
+				var y = Math.floor( i / map_h );	
+				return {x: x, y: y};
+			}
+			
+			function linearIndex( c ) {
+				return c.y * map_w + c.x;
+			}
+			
+			function east( c ) {
+				var x = c.x + 1;
+				if( x > map_w - 1 ) {
+					return;
+				}
+				return {x: x, y: c.y};
+			}
+			
+			function south( c ) {
+				var y = c.y + 1;
+				if( y > map_h - 1 ) {
+					return;
+				}
+				return {x: c.x, y: y};
+			}
+			
+			function southeast( c ) {
+				var x = c.x + 1;
+				var y = c.y + 1;
+				if( x > map_w - 1 || y > map_h - 1 ) {
+					return;
+				}
+				return {x: x, y: y};
+			}
+			
+			function get_tile_from_mapIndex( i ) {
+				// this is a tile if east, south, southeast tests are passed.
+				var c1 = coords(i);
+				var c2 = east( c1 );
+				var c3 = south( c1 );
+				var c4 = southeast( c1 );
+				if( !(c2 && c3 && c4) ) {
+					return;
+				}
+				var p1 = {
+					x: c1.x,
+					y: c1.y,
+					h: hm[i]
+				}
+				var p2 = {
+					x: c2.x,
+					y: c2.y,
+					h: hm[linearIndex(c2)]
+				}
+				var p3 = {
+					x: c3.x,
+					y: c3.y,
+					h: hm[linearIndex(c3)]		
+				}
+				var p4 = {
+					x: c4.x,
+					y: c4.y,
+					h: hm[linearIndex(c4)]		
+				}
+				return {p1: p1, p2: p2, p3: p3, p4: p4};
+			}
+			
+			
+			
+			
+ 
+			// drawing
+			function dot( x, y ) {
+				ctx.fillRect(x,y,1,1);
+			}  
+
+			function line( x1, y1, x2, y2 ) {
+				ctx.beginPath();
+				ctx.moveTo(x1, y1);
+				ctx.lineTo(x2, y2);
+				ctx.stroke();
+			}
+
+
+
+			// transformations
+			function rotate45( _x, _y ) {
+				var x = _x * cos45 - _y * sen45;
+				var y = _x * sen45 + _y * cos45;
+				return {x: x, y: y};
+			}
+
+			function scale( _x, _y, sx, sy ) {
+				var x = _x * sx;
+				var y = _y * sy;
+				return {x: x, y: y};		
+			}
+
+			function translate( _x, _y, tx, ty ) {
+				var x = _x + tx;
+				var y = _y + ty;
+				return {x: x, y: y};	
+			}  
+
+			function render_transform( p ) {
+				var h = p.h
+				var c = rotate45(p.x, p.y);
+				c = scale(c.x, c.y, tile_size, tile_size/2);
+				c = translate(c.x, c.y, 300, 0);
+				c = translate(c.x, c.y, 0, - h * (tile_size/2));
+
+				return c;
+			}
+			
+  
+  
+			//
+			//
+			// public functions
+			//
+			//
+   
+			this.setMap = function(_hm, _map_w, _map_h) {
+				hm = _hm;
+				map_w = _map_w;
+				map_h = _map_h;
+				
+				// create triangles
+				for( var i = 0; i < hm.length; i++ ) {
+					var tile = get_tile_from_mapIndex(i);
+					
+					if( tile ) {
+						var t1 = {
+							v1: tile.p1,
+							v2: tile.p2,
+							v3: tile.p3
+						}
+						var t2 = {
+							v1: tile.p3,
+							v2: tile.p2,
+							v3: tile.p4
+						}
+						triangles.push(t1, t2);
+					}
+				}
+				
+			}
+  
+			this.render = function() {
+				for( var t = 0; t < triangles.length; t++ ) {
+				
+					var triangle = triangles[t];
+
+					var c1 = render_transform(triangle.v1);
+					var c2 = render_transform(triangle.v2);
+					var c3 = render_transform(triangle.v3);
+					
+					dot( c1.x, c1.y );
+					
+					line( c1.x, c1.y, c2.x, c2.y );
+					line( c2.x, c2.y, c3.x, c3.y );
+					line( c1.x, c1.y, c3.x, c3.y );
+
+					ctx.beginPath();
+					ctx.fillStyle="#ddeeaa";
+					ctx.moveTo(c1.x, c1.y);
+					ctx.lineTo(c2.x, c2.y);
+					ctx.lineTo(c3.x, c3.y);
+					ctx.closePath();
+					ctx.fill();
+					
+
+				}
+			}
+  
+		}
+
+
+
+		// game config
+		var canvas_id = "canvas";
+		var hm = [
+			0,0,0,0,0,0,0,0,0,0,
+			0,0,0,0,0,1,1,1,0,0,
+			0,0,0,0,1,1,2,1,0,0,
+			0,0,0,0,1,1,1,1,0,0,
+			0,0,0,1,1,2,2,1,1,0,
+			0,0,0,0,1,2,2,1,0,0,
+			0,0,0,0,1,1,1,0,0,0,
+			0,0,0,0,0,0,0,0,0,1,
+			0,0,0,0,0,0,1,1,1,1,
+			0,0,0,0,0,0,1,1,1,1,
+		];
+		var map_w = 10;
+		var map_h = 10;
+
+
+
+		// game building
+		var g = new Game(canvas_id);
+		g.setMap(hm, map_w, map_h);
+		g.render();
+
+
+
+
+	</script>
+</body>
+</html>
